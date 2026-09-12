@@ -21,9 +21,10 @@ def admin_main_panel_keyboard(language: str = "uz") -> types.InlineKeyboardMarku
     builder.button(text="⚙️ " + _t("Bot sozlamalari", "Bot Settings", language), callback_data="admin_bot_settings")
     builder.button(text="📝 " + _t("Loglar va xatolar", "Logs & Errors", language), callback_data="admin_logs")
     builder.button(text="🔄 " + _t("Botni boshqarish", "Bot Control", language), callback_data="admin_bot_control")
+    builder.button(text="🛠️ " + _t("Mailing / Loglar (eski panel)", "Mailing / Logs (legacy panel)", language), callback_data="admin_legacy_panel")
     builder.button(text=get_text("btn_back", language), callback_data="back_to_main")
 
-    builder.adjust(2, 2, 2, 2, 2, 1)
+    builder.adjust(2, 2, 2, 2, 2, 1, 1)
     return builder.as_markup()
 
 

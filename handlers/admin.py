@@ -613,14 +613,30 @@ async def _cleanup_downloads_once() -> tuple[str, bool]:
     return bm.downloads_cleanup_finished(removed_files, removed_dirs, skipped_recent_files), True
 
 
-@router.message(Command("admin"), IsBotAdmin())
+@router.message(Command("ops"), IsBotAdmin())
 async def admin(message: types.Message):
+    """Legacy operations panel (runtime health, mailing, logs).
+
+    Kept available under /ops now that /admin opens the full admin panel
+    (handlers/admin_extended.py), which links back to this panel via the
+    "🔧 Operatsion panel" button in Bot Control.
+    """
     await bot.send_chat_action(message.chat.id, "typing")
 
     if message.chat.type == 'private':
         await _render_admin_panel(message, edit=False)
     else:
         await message.answer(bm.not_groups())
+
+
+@router.callback_query(F.data == "admin_legacy_panel")
+async def admin_legacy_panel_entry(call: types.CallbackQuery):
+    """Entry point into the legacy /ops-style panel (mailing, logs,
+    active-user/group checks) from within the main admin panel."""
+    if not await _ensure_admin_callback(call):
+        return
+    await call.answer()
+    await _render_admin_panel(call.message, edit=True)
 
 
 @router.message(Command("perf"), IsBotAdmin())
