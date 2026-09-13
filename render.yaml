@@ -1,0 +1,76 @@
+services:
+  - type: web
+    name: downloader-bot
+    runtime: docker
+    dockerfilePath: ./Dockerfile
+    dockerContext: .
+    plan: starter
+    region: frankfurt
+    healthCheckPath: /health
+    autoDeployTrigger: commit
+    disk:
+      name: bot-data
+      mountPath: /app/downloads
+      sizeGB: 1
+    envVars:
+      # --- Required: fill these in on the Render dashboard ---
+      - key: BOT_TOKEN
+        sync: false
+      - key: ADMIN_ID
+        sync: false
+      - key: CUSTOM_API_URL
+        sync: false
+
+      # --- Database: auto-wired from the Postgres service below ---
+      - key: DATABASE_URL
+        fromDatabase:
+          name: downloader-bot-db
+          property: connectionString
+
+      # --- Flask server: must match Render's port scan ---
+      - key: HTTP_HEALTH_HOST
+        value: "0.0.0.0"
+      - key: HTTP_HEALTH_PORT
+        value: "8080"
+      - key: PORT
+        value: "8080"
+
+      # --- Webhook mode ---
+      # WEBHOOK_URL = this service's public URL, e.g. https://downloader-bot-xxxx.onrender.com
+      # (Render assigns this on first deploy — copy it from the service's
+      # "Settings" page into this variable, then redeploy once.)
+      - key: WEBHOOK_URL
+        sync: false
+      # Random secret path segment for the webhook route (e.g. openssl rand -hex 20).
+      # If left unset, the bot token suffix is used instead — still fine, but
+      # setting your own is slightly safer.
+      - key: WEBHOOK_SECRET_PATH
+        generateValue: true
+      # Telegram sends this back on every webhook call so you can verify the
+      # request actually came from Telegram, not just anyone who finds the URL.
+      - key: WEBHOOK_SECRET_TOKEN
+        generateValue: true
+
+      # --- Optional integrations: leave blank if unused ---
+      - key: MEASUREMENT_ID
+        sync: false
+      - key: API_SECRET
+        sync: false
+      - key: CHANNEL_ID
+        sync: false
+      - key: COBALT_API_URL
+        sync: false
+      - key: COBALT_API_KEY
+        sync: false
+      - key: SPOTIFY_CLIENT_ID
+        sync: false
+      - key: SPOTIFY_CLIENT_SECRET
+        sync: false
+      - key: SPOTIFY_MARKET
+        value: "UA"
+
+databases:
+  - name: downloader-bot-db
+    plan: starter
+    region: frankfurt
+    postgresMajorVersion: "17"
